@@ -1,0 +1,9 @@
+{
+    "app": "python3 app.py",
+    "context": {
+        "environment": {
+            "AWS_REGION": "us-east-1",
+            "AVAILABILITY_ZONES": ["a", "b"]
+        }
+    }
+}
