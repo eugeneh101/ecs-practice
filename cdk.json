@@ -3,7 +3,14 @@
     "context": {
         "environment": {
             "AWS_REGION": "us-east-1",
-            "AVAILABILITY_ZONES": ["a", "b"]
+            "AVAILABILITY_ZONES": ["a", "b"],
+            "IAM_ROLE_NAME": "ecs-practice-iam-role",
+            "VPC_NAME": "ecs-practice-vpc",
+            "ECR_REPO_NAME": "ecs-practice-ecr-repo",
+            "ECS_CLUSTER_NAME": "ecs-practice-cluster",
+            "ECS_TASK_DEFINITION_NAME": "ecs-practice-task-definition",
+            "DYNAMODB_TABLE_NAME": "ecs-practice-table",
+            "SQS_QUEUE_NAME": "ecs-practice-queue"
         }
     }
 }

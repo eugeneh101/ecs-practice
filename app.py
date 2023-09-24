@@ -8,7 +8,7 @@ environment = app.node.try_get_context("environment")
 EcsPracticeStack(
     app,
     "EcsPracticeStack",
-    env=cdk.Environment(region=environment["AWS_REGION"]),    
+    env=cdk.Environment(region=environment["AWS_REGION"]),
     environment=environment,
 )
 app.synth()
