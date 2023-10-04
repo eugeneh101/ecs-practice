@@ -4,14 +4,12 @@ import cdk_ecr_deployment as ecr_deploy
 from aws_cdk import (
     RemovalPolicy,
     Stack,
-    aws_dynamodb as dynamodb,
     aws_ecr as ecr,
     aws_ecr_assets as ecr_assets,
     aws_ec2 as ec2,
     aws_ecs as ecs,
     aws_iam as iam,
     aws_logs as logs,
-    aws_sqs as sqs,
 )
 from constructs import Construct
 
@@ -44,26 +42,23 @@ class EcsPracticeStack(Stack):
                     subnet_type=ec2.SubnetType.PUBLIC,
                     cidr_mask=24,
                 ),
-                ec2.SubnetConfiguration(
-                    name="Private-Subnet",
-                    subnet_type=ec2.SubnetType.PRIVATE_WITH_EGRESS,
-                    cidr_mask=24,
-                )
             ],
             availability_zones=[
                 f"{environment['AWS_REGION']}{az}"
                 for az in environment["AVAILABILITY_ZONES"]
             ],
-            nat_gateways=len(environment["AVAILABILITY_ZONES"]),
         )
-        # need following endpoints if use PRIVATE_ISOLATED subnet
-        # self.vpc.add_interface_endpoint("EcrDockerEndpoint", service=ec2.InterfaceVpcEndpointAwsService.ECR_DOCKER)
-        # self.vpc.add_interface_endpoint("EcrEndpoint", service=ec2.InterfaceVpcEndpointAwsService.ECR)
-        # self.vpc.add_interface_endpoint("CloudWatchLogsEndpoint", service=ec2.InterfaceVpcEndpointAwsService.CLOUDWATCH_LOGS)
-        # self.vpc.add_interface_endpoint("SecretsManagerEndpoint", service=ec2.InterfaceVpcEndpointAwsService.SECRETS_MANAGER)
-        # self.vpc.add_interface_endpoint("SqsEndpoint", service=ec2.InterfaceVpcEndpointAwsService.SQS)
-        # self.vpc.add_gateway_endpoint("DynamodbEndpoint", service=ec2.GatewayVpcEndpointAwsService.DYNAMODB)
-        # self.vpc.add_gateway_endpoint("S3Endpoint", service=ec2.GatewayVpcEndpointAwsService.S3)
+        self.security_group_allow_port_80 = ec2.SecurityGroup(
+            self,
+            "SecurityGroupPortAllowPort80",
+            vpc=self.vpc,
+            security_group_name="allow-port-80",
+            allow_all_outbound=True,
+        )
+        self.security_group_allow_port_80.add_ingress_rule(  # for FastAPI
+            peer=ec2.Peer.any_ipv4(),
+            connection=ec2.Port.tcp(80),
+        )
 
         self.ecr_repo = ecr.Repository(
             self,
@@ -83,29 +78,6 @@ class EcsPracticeStack(Stack):
         asset = ecr_assets.DockerImageAsset(
             self, "EcrImage", directory="service"
         )  # uploads to `container-assets` ECR repo
-        # image = ecs.ContainerImage.from_docker_image_asset(asset=asset)
-        # image = ecs.ContainerImage.from_registry("springio/gs-spring-boot-docker")
-
-        self.dynamodb_table = dynamodb.Table(
-            self,
-            "DynamodbTable",
-            table_name=environment["DYNAMODB_TABLE_NAME"],
-            partition_key=dynamodb.Attribute(
-                name="type", type=dynamodb.AttributeType.STRING
-            ),
-            sort_key=dynamodb.Attribute(
-                name="datetime", type=dynamodb.AttributeType.STRING
-            ),
-            removal_policy=RemovalPolicy.DESTROY,
-        )
-
-        self.sqs_queue = sqs.Queue(
-            self,
-            "SqsQueue",
-            queue_name=environment["SQS_QUEUE_NAME"],
-            removal_policy=RemovalPolicy.DESTROY,
-            # dead_letter_queue=None,
-        )
 
         # connecting AWS resources together
         ecr_deploy.ECRDeployment(  # upload to desired ECR repo
@@ -147,11 +119,5 @@ class EcsPracticeStack(Stack):
                 log_group=log_group,
                 mode=ecs.AwsLogDriverMode.NON_BLOCKING,
             ),
-            environment={
-                "DYNAMODB_TABLE_NAME": self.dynamodb_table.table_name,
-                "SQS_QUEUE_NAME": self.sqs_queue.queue_name,
-            },
         )
-        # container.add_port_mappings(ecs.PortMapping(container_port=80))
-        self.dynamodb_table.grant_write_data(self.role)
-        self.sqs_queue.grant_consume_messages(self.role)
+        container.add_port_mappings(ecs.PortMapping(host_port=80, container_port=80))
