@@ -8,7 +8,8 @@
             "VPC_NAME": "ecs-practice-vpc",
             "ECR_REPO_NAME": "ecs-practice-ecr-repo",
             "ECS_CLUSTER_NAME": "ecs-practice-cluster",
-            "ECS_TASK_DEFINITION_NAME": "ecs-practice-task-definition"
+            "ECS_TASK_DEFINITION_NAME": "ecs-practice-task-definition",
+            "ECS_SERVICE_NAME": "ecs-practice-service"
         }
     }
 }

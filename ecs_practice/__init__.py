@@ -121,3 +121,16 @@ class EcsPracticeStack(Stack):
             ),
         )
         container.add_port_mappings(ecs.PortMapping(host_port=80, container_port=80))
+
+        self.fargate_service = ecs.FargateService(
+            self,
+            "FargateService",
+            service_name=environment["ECS_SERVICE_NAME"],
+            cluster=self.ecs_cluster,
+            task_definition=self.ecs_task_definition,
+            desired_count=1,
+            vpc_subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PUBLIC),
+            security_groups=[self.security_group_allow_port_80],
+            assign_public_ip=True,
+            # enable_execute_command=None,
+        )
