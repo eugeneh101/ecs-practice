@@ -153,5 +153,19 @@ class EcsPracticeStack(Stack):
             },
         )
         # container.add_port_mappings(ecs.PortMapping(container_port=80))
+
+        self.fargate_service = ecs.FargateService(
+            self,
+            "FargateService",
+            service_name=environment["ECS_SERVICE_NAME"],
+            cluster=self.ecs_cluster,
+            task_definition=self.ecs_task_definition,
+            desired_count=2,
+            vpc_subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE_WITH_EGRESS),
+            assign_public_ip=False,
+            # security_groups=[],
+            # enable_execute_command=None,
+        )
+
         self.dynamodb_table.grant_write_data(self.role)
         self.sqs_queue.grant_consume_messages(self.role)
