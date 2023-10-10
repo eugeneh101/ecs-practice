@@ -10,6 +10,7 @@
             "ECS_CLUSTER_NAME": "ecs-practice-cluster",
             "ECS_TASK_DEFINITION_NAME": "ecs-practice-task-definition",
             "ECS_SERVICE_NAME": "ecs-practice-service",
+            "ECS_ENABLE_EXEC": true,
             "DYNAMODB_TABLE_NAME": "ecs-practice-table",
             "SQS_QUEUE_NAME": "ecs-practice-queue"
         }

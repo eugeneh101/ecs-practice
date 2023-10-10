@@ -33,6 +33,18 @@ class EcsPracticeStack(Stack):
                 ),  ### later principle of least privileges
             ],
         )
+        if environment["ECS_ENABLE_EXEC"]:
+            self.role.add_to_policy(
+                iam.PolicyStatement(
+                    actions=[
+                        "ssmmessages:CreateDataChannel",
+                        "ssmmessages:OpenDataChannel",
+                        "ssmmessages:OpenControlChannel",
+                        "ssmmessages:CreateControlChannel",
+                    ],
+                    resources=["*"],
+                )
+            )
 
         self.vpc = ec2.Vpc(
             self,
@@ -48,7 +60,7 @@ class EcsPracticeStack(Stack):
                     name="Private-Subnet",
                     subnet_type=ec2.SubnetType.PRIVATE_WITH_EGRESS,
                     cidr_mask=24,
-                )
+                ),
             ],
             availability_zones=[
                 f"{environment['AWS_REGION']}{az}"
@@ -161,10 +173,12 @@ class EcsPracticeStack(Stack):
             cluster=self.ecs_cluster,
             task_definition=self.ecs_task_definition,
             desired_count=2,
-            vpc_subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE_WITH_EGRESS),
+            vpc_subnets=ec2.SubnetSelection(
+                subnet_type=ec2.SubnetType.PRIVATE_WITH_EGRESS
+            ),
             assign_public_ip=False,
+            enable_execute_command=environment["ECS_ENABLE_EXEC"],
             # security_groups=[],
-            # enable_execute_command=None,
         )
 
         self.dynamodb_table.grant_write_data(self.role)
